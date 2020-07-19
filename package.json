@@ -1,0 +1,12 @@
+{
+  "name": "rice-deployment",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/longshotdev/rice-deployment.git",
+  "author": "AndyIsCool5463 <andyl5463@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
