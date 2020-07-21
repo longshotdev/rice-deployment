@@ -20,10 +20,6 @@ Using the same layout as github's sinatra
 */
 server.use(express.json());
 server.use(express.urlencoded({ extended: true }));
-server.get("/fuck", async (req, res) => {
-  res.send(200);
-  await deploy();
-});
 server.get("/", (r, rs) => {
   rs.send("deployment main page.");
 });
@@ -37,7 +33,7 @@ server.post("/deploy", async (req, res) => {
   switch (action) {
     case "pull_request":
       if (payload["action"] == "closed" && payload["pull_request"]["merged"]) {
-        await start_deployment(payload["pull_request"]);
+        await start_deployment(payload["pull_request"], "Development");
         console.log("YES YES WE ARE FUCKING HERE");
       }
       break;
@@ -54,10 +50,10 @@ server.post("/deploy", async (req, res) => {
 
   res.sendStatus(200);
 });
-async function start_deployment(pr) {
+async function start_deployment(pr, type) {
   user = pr["user"]["login"];
   payload = {
-    environment: "production",
+    environment: type,
     deploy_user: user,
   };
   await octokit.repos.createDeployment({
@@ -80,7 +76,11 @@ async function process_deployment(payload) {
     });
   }, 1000);
   console.log("pending state");
-  await deploy();
+  if (type == "Development") {
+    await deploy_stage();
+  } else {
+    await deploy_production();
+  }
   setTimeout(async () => {
     octokit.repos.createDeploymentStatus({
       owner: repository["owner"]["login"],
@@ -97,7 +97,7 @@ function update_deployment_status(payload) {
   );
 }
 // rice bot dir is /home/pi/.microservices/rice-bot
-async function deploy() {
+async function deploy_stage() {
   // const DIR = process.cwd() + "/NiggaBonkHead";
   // const repoURL = "https://github.com/longshotdev/rice-bot.git";
   // const version = "v0.1";
@@ -130,6 +130,10 @@ async function deploy() {
   // }
   shell.cd("..");
   await shell.exec("~/scripts/deploy_stage", { async: true });
+}
+async function deploy_production() {
+  shell.cd("..");
+  await shell.exec("~/scripts/deploy_prod", { async: true });
 }
 
 server.listen(3000, () => {
